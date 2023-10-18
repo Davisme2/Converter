@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 # Form implementation generated from reading ui file 'INTERFACE.ui'
 #
@@ -14,6 +15,7 @@ from PyQt5.QtWidgets import QFileDialog
 
 
 class Ui_MainWindow(object):
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1254, 888)
@@ -35,12 +37,12 @@ class Ui_MainWindow(object):
 "font: 24pt \"Roboto\";")
         self.pushButton_2.setObjectName("pushButton_2")
 
+        # TABLE BUILDING
         self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
         self.tableWidget.setGeometry(QtCore.QRect(50, 50, 1141, 601))
         self.tableWidget.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(5)
-        #self.tableWidget.setHorizontalHeaderLabels(["Nom du fichier", "format", "Taille", "Statut", "Temps restant"])
         self.tableWidget.setColumnWidth(0, 582)
         self.tableWidget.setColumnWidth(1, 107)
         self.tableWidget.setColumnWidth(2, 150)
@@ -50,6 +52,7 @@ class Ui_MainWindow(object):
         # Supprimer la numérotation des lignes
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.horizontalHeader().setVisible(False)
+        # Rendre toutes les cellules non sélectionnables après avoir configuré la table
 
         # Générer les 14 premières lignes vides
         for i in range(0, 16):
@@ -92,51 +95,42 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton.setText(_translate("MainWindow", "selectionner"))
-        self.pushButton_2.setText(_translate("MainWindow", "convertir"))
 
     def open_file_dialog(self):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.ReadOnly
 
         file_dialog = QtWidgets.QFileDialog()
-        video_files, _ = file_dialog.getOpenFileNames(None, "Sélectionner des fichiers média", "", "Fichiers Média (*.mp4 *.avi *.mkv *.mp3 *.wav *.mov);;Tous les fichiers (*)", options=options)
+        video_files, _ = file_dialog.getOpenFileNames(None, "Sélectionner des fichiers média", "",
+                                                      "Fichiers Média (*.mp4 *.avi *.mkv *.mp3 *.wav *.mov);;Tous les fichiers (*)",
+                                                      options=options)
 
         if video_files:
             self.selected_files = video_files
+
+            # Ajoutez une nouvelle ligne pour chaque fichier sélectionné
+            for i, file_path in enumerate(self.selected_files):
+                file_name = os.path.basename(file_path)
+
+                # Colonne : Noms des fichiers
+                item = QtWidgets.QTableWidgetItem(file_name)
+                self.tableWidget.setItem(i+1, 0, item)
+                # self.tableWidget.item(i+1, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+
+                # Colonne : Taille des fichiers
+                file_size = os.path.getsize(file_path)
+                item = QtWidgets.QTableWidgetItem(str(file_size))
+                self.tableWidget.setItem(i+1, 2, item)
+
             print("Vidéos sélectionnées :", self.selected_files)
-            # Créer un tableau avec les colonnes et les entêtes
-            self.tableWidget.setColumnCount(4)
-            self.tableWidget.setHorizontalHeaderLabels(["Nom du fichier", "Taille", "Statut", "Temps restant"])
-            
-            # Ajouter les lignes pour les fichiers sélectionnés
-            for file in self.selected_files:
-                # Ajouter une nouvelle ligne
-                rowPosition = self.tableWidget.rowCount()
-                self.tableWidget.insertRow(rowPosition)
 
-                # Insérer le nom du fichier dans la première cellule
-                self.tableWidget.setItem(rowPosition, 0, QtWidgets.QTableWidgetItem(file))
-
-                # Autres opérations que vous souhaitez effectuer, par exemple la taille, le statut, le temps restant
-
-                # Ajuster la taille de la première colonne (4 fois plus grande que les autres)
-                self.tableWidget.setColumnWidth(0, 4 * self.tableWidget.width() / 6)
-
-            # Si le nombre de lignes dépasse 10, augmentez la hauteur de la table pour afficher plus de lignes
-            if self.tableWidget.rowCount() > 10:
-                new_height = self.tableWidget.rowCount() * self.tableWidget.rowHeight(0)
-                self.tableWidget.setFixedHeight(new_height)
-        else:
-            QMessageBox.warning(self, "Avertissement", "Veuillez sélectionner une ou plusieurs vidéos s'il vous plaît.",
-                                QMessageBox.Ok)
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.pushButton.setText(_translate("MainWindow", "selectionner"))
+        self.pushButton_2.setText(_translate("MainWindow", "convertir"))
 
 
 if __name__ == "__main__":
