@@ -10,7 +10,8 @@ import os
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QFileDialog, QVBoxLayout, QTableWidget, QStackedWidget, QMessageBox, QWidget, QProgressBar
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QFileDialog, QVBoxLayout, QTableWidget, \
+    QStackedWidget, QMessageBox, QWidget, QProgressBar, QComboBox
 from PyQt5.QtWidgets import QFileDialog
 
 
@@ -39,7 +40,7 @@ class Ui_MainWindow(object):
 
         # TABLE BUILDING
         self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
-        self.tableWidget.setGeometry(QtCore.QRect(50, 50, 1141, 601))
+        self.tableWidget.setGeometry(QtCore.QRect(50, 50, 1141, 595))
         self.tableWidget.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(5)
@@ -53,6 +54,7 @@ class Ui_MainWindow(object):
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.horizontalHeader().setVisible(False)
         # Rendre toutes les cellules non sélectionnables après avoir configuré la table
+        self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         # Générer les 14 premières lignes vides
         for i in range(0, 16):
@@ -114,15 +116,33 @@ class Ui_MainWindow(object):
             for i, file_path in enumerate(self.selected_files):
                 file_name = os.path.basename(file_path)
 
-                # Colonne : Noms des fichiers
+                # Colonne 1 : Noms des fichiers
                 item = QtWidgets.QTableWidgetItem(file_name)
+                # item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable(False))
                 self.tableWidget.setItem(i+1, 0, item)
-                # self.tableWidget.item(i+1, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+
+                # Colonne 2 : Format de fichier à convertir
+                # Créez une liste de formats multimédias
+                multimedia_formats = ["*.mp4", "*.avi", "*.mkv", "*.mp3", "*.wav", "*.mov"]
+                # Ajoutez d'autres formats si nécessaire
+                # Créez un QComboBox et ajoutez les formats multimédias à l'intérieur
+                format_combobox = QComboBox()
+                format_combobox.addItems(multimedia_formats)
+                # Insérez le QComboBox dans la cellule de la deuxième ligne de la colonne "format"
+                self.tableWidget.setCellWidget(1, 1, format_combobox)
 
                 # Colonne : Taille des fichiers
                 file_size = os.path.getsize(file_path)
                 item = QtWidgets.QTableWidgetItem(str(file_size))
+                # Convertir la taille en méga-octets (Mo) ou giga-octets (Go)
+                if file_size >= 1024 ** 3:  # Si la taille est supérieure ou égale à 1 Go
+                    size_str = f"{file_size / (1024 ** 3):.2f} Go"
+                else:  # Sinon, convertir en Mo
+                    size_str = f"{file_size / (1024 ** 2):.2f} Mo"
+                item = QtWidgets.QTableWidgetItem(size_str)
+                # item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable(False))
                 self.tableWidget.setItem(i+1, 2, item)
+                self.tableWidget.item(i+1, 2).setTextAlignment(QtCore.Qt.AlignCenter)
 
             print("Vidéos sélectionnées :", self.selected_files)
 
