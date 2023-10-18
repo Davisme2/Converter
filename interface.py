@@ -113,23 +113,35 @@ class Ui_MainWindow(object):
             self.selected_files = video_files
 
             # Ajoutez une nouvelle ligne pour chaque fichier sélectionné
-            for i, file_path in enumerate(self.selected_files):
+            #for i, file_path in enumerate(self.selected_files):
+
+            # Recherche de la première ligne vide (i + 1 car la première ligne est déjà occupée)
+            current_row = 1
+            while self.tableWidget.item(current_row, 0) is not None:
+                current_row += 1
+
+            for file_path in self.selected_files:
+                #if current_row >= self.tableWidget.rowCount():
+                    # Vous pouvez ajouter du code ici pour gérer la situation si toutes les lignes sont déjà occupées.
+                    # Par exemple, afficher un message d'erreur ou augmenter la taille de la table.
+                    # Pour l'instant, nous supposons que vous gérez le cas où toutes les lignes sont occupées.
+
                 file_name = os.path.basename(file_path)
 
                 # Colonne 1 : Noms des fichiers
                 item = QtWidgets.QTableWidgetItem(file_name)
                 # item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable(False))
-                self.tableWidget.setItem(i+1, 0, item)
+                self.tableWidget.setItem(current_row, 0, item)
 
                 # Colonne 2 : Format de fichier à convertir
                 # Créez une liste de formats multimédias
                 multimedia_formats = ["*.mp4", "*.avi", "*.mkv", "*.mp3", "*.wav", "*.mov"]
                 # Ajoutez d'autres formats si nécessaire
                 # Créez un QComboBox et ajoutez les formats multimédias à l'intérieur
-                format_combobox = QComboBox()
+                format_combobox = QtWidgets.QComboBox()
                 format_combobox.addItems(multimedia_formats)
                 # Insérez le QComboBox dans la cellule de la deuxième ligne de la colonne "format"
-                self.tableWidget.setCellWidget(1, 1, format_combobox)
+                self.tableWidget.setCellWidget(current_row, 1, format_combobox)
 
                 # Colonne : Taille des fichiers
                 file_size = os.path.getsize(file_path)
@@ -141,8 +153,10 @@ class Ui_MainWindow(object):
                     size_str = f"{file_size / (1024 ** 2):.2f} Mo"
                 item = QtWidgets.QTableWidgetItem(size_str)
                 # item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable(False))
-                self.tableWidget.setItem(i+1, 2, item)
-                self.tableWidget.item(i+1, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+                self.tableWidget.setItem(current_row, 2, item)
+                self.tableWidget.item(current_row, 2).setTextAlignment(QtCore.Qt.AlignCenter)
+
+                current_row += 1  # Passe à la prochaine ligne libre pour le prochain fichier
 
             print("Vidéos sélectionnées :", self.selected_files)
 
