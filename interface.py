@@ -121,8 +121,9 @@ class Ui_MainWindow(object):
                 current_row += 1
 
             for file_path in self.selected_files:
-                #if current_row >= self.tableWidget.rowCount():
+                if current_row >= self.tableWidget.rowCount():
                     # Vous pouvez ajouter du code ici pour gérer la situation si toutes les lignes sont déjà occupées.
+                    self.tableWidget.insertRow(current_row)
                     # Par exemple, afficher un message d'erreur ou augmenter la taille de la table.
                     # Pour l'instant, nous supposons que vous gérez le cas où toutes les lignes sont occupées.
 
