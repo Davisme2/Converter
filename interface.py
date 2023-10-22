@@ -2,6 +2,7 @@ import os
 import threading
 import time
 
+from PyQt5.QtCore import QTimer
 from moviepy.editor import VideoFileClip
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QFileDialog, QVBoxLayout, QTableWidget, \
@@ -22,14 +23,14 @@ class Ui_MainWindow(object):
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QtCore.QRect(780, 770, 171, 51))
         self.pushButton.setStyleSheet("background-color: rgb(255, 255, 255);\n"
-"font: 15pt \"Roboto\";")
+                                      "font: 15pt \"Roboto\";")
         self.pushButton.setObjectName("pushButton")
         self.pushButton.clicked.connect(self.open_file_dialog)
 
         self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_2.setGeometry(QtCore.QRect(1010, 770, 161, 51))
         self.pushButton_2.setStyleSheet("background-color: rgb(255, 255, 255);\n"
-"font: 15pt \"Roboto\";")
+                                        "font: 15pt \"Roboto\";")
         self.pushButton_2.setObjectName("pushButton_2")
         self.pushButton_2.clicked.connect(self.file_converter)
 
@@ -53,7 +54,8 @@ class Ui_MainWindow(object):
 
         self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit.setGeometry(QtCore.QRect(300, 660, 831, 41))
-        self.lineEdit.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.lineEdit.setStyleSheet("background-color: rgb(255, 255, 255);\n"
+                                    "font: 19pt \"Roboto\";")
         self.lineEdit.setObjectName("lineEdit")
 
         self.label = QtWidgets.QLabel(self.centralwidget)
@@ -67,7 +69,7 @@ class Ui_MainWindow(object):
                                         "background-color: rgb(11, 69, 95);\n"
                                         "font: 15pt \"Roboto\";")
         self.pushButton_3.setObjectName("pushButton_3")
-        self.pushButton_3.clicked.connect(self.open_folder_dialog)
+        self.pushButton_3.clicked.connect(self.open_folder_output_dialog)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1254, 26))
@@ -154,9 +156,9 @@ class Ui_MainWindow(object):
             self.selected_files = video_files
 
             # Ajoutez une nouvelle ligne pour chaque fichier sélectionné
-            #for i, file_path in enumerate(self.selected_files):
+            # for i, file_path in enumerate(self.selected_files):
 
-            # Recherche de la première ligne vide (i + 1 car la première ligne est déjà occupée)
+            # Recherche de la première ligne vide (i + 1, car la première ligne est déjà occupée)
             current_row = 1
             while self.tableWidget.item(current_row, 0) is not None:
                 current_row += 1
@@ -204,62 +206,104 @@ class Ui_MainWindow(object):
                 self.tableWidget.item(current_row, 3).setTextAlignment(QtCore.Qt.AlignCenter)
 
                 # Colonne : Temps restant
-                # afficher au départ dans la cellule de la colonne status "Convertir"
-                self.tableWidget.setItem(current_row, 4, QtWidgets.QTableWidgetItem("00:00:00"))
+                # Afficher au départ dans la cellule de la colonne status "Démarrer"
+                self.tableWidget.setItem(current_row, 4, QtWidgets.QTableWidgetItem("Démarrer"))
                 self.tableWidget.item(current_row, 4).setTextAlignment(QtCore.Qt.AlignCenter)
-
-                # Colonne : Temps restant
                 # Calculez la ligne courante en fonction de la position du fichier dans la liste
                 # current_row = self.selected_files.index(file_path) + 1
 
                 # Appelez file_converter pour convertir chaque fichier
-                # self.file_converter(file_path, current_row)
+                self.file_converter(file_path, current_row, 4)
 
                 current_row += 1  # Passe à la prochaine ligne libre pour le prochain fichier
 
             print("Vidéos sélectionnées :", self.selected_files)
 
+    """
     def open_folder_dialog(self):
         folder_path = QtWidgets.QFileDialog.getExistingDirectory(None, "Sélectionner un dossier de destination", "", QtWidgets.QFileDialog.ShowDirsOnly)
 
         if folder_path:
             # Le chemin du dossier sélectionné par l'utilisateur est stocké dans la variable "folder_path"
             print("Dossier de destination sélectionné :", folder_path)
+    """
 
-    def file_converter(self, input_file, output_format, row):
-        video_duration = 0  # Initialisation de la variable video_duration
+    def open_folder_output_dialog(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.ShowDirsOnly
 
-        def convert_video():
-            try:
-                # Charger la vidéo d'entrée
-                video = VideoFileClip(input_file)
+        folder_dialog = QtWidgets.QFileDialog()
+        folder_path = folder_dialog.getExistingDirectory(None, "Sélectionner le dossier de destination",
+                                                         options=options)
 
-                # Calculer la durée de la vidéo en secondes
-                video_duration = video.duration
+        if folder_path:
+            # Mettez à jour le champ de saisie pour afficher le chemin du dossier sélectionné
+            self.lineEdit.setText(folder_path)
+            # Le chemin du dossier sélectionné par l'utilisateur est stocké dans la variable "folder_path"
+            print("Dossier de destination sélectionné :", folder_path)
 
-                # Convertir la vidéo dans le format de sortie choisi
-                output_file = input_file.replace(".extension_actuelle", f".{output_format}")
-                video.write_videofile(output_file, codec="libx264", progress_bar=False)
+    """
+    def file_converter(self):
+        # Obtenez le dossier de destination à partir du champ de saisie
+        folder_path = self.lineEdit.text()
 
-                # Mettez à jour la colonne "Statut" pour afficher "En cours ..." dès le début
-                self.tableWidget.setItem(row, 3, QtWidgets.QTableWidgetItem("En cours ..."))
+        # Vérifiez que le dossier de destination est spécifié
+        if not folder_path:
+            QtWidgets.QMessageBox.critical(None, "Erreur", "Veuillez sélectionner un dossier de destination.")
+            return
 
-                # Mettez à jour la cellule de statut avec "Converti"
-                status_item = QtWidgets.QTableWidgetItem("Converti")
-                self.tableWidget.setItem(row, 3, status_item)
-                # self.update_status(row, 100, "0:00")  # 100% indique que la conversion est terminée
+        # Recherchez les fichiers sélectionnés dans la table
+        for row in range(1, self.tableWidget.rowCount()):  # Commencez depuis la ligne 1
 
-                print(f"Conversion réussie : {input_file} -> {output_file}")
+            # Vérifiez si la colonne "Statut" contient "En cours ..." pour éviter de reconvertir
+            status_item = self.tableWidget.item(row, 3)
+            if status_item and status_item.text() == "En cours ...":
+                continue
 
-            except Exception as e:
-                # En cas d'erreur lors de la conversion
-                # Gérer l'erreur ou afficher un message d'erreur à l'utilisateur
-                print(f"Erreur lors de la conversion : {str(e)}")
-                """
-            finally:
-                # Réinitialisez le pourcentage à 0% une fois la conversion terminée
-                self.tableWidget.setItem(row, 3, QtWidgets.QTableWidgetItem("100%"))
-                """
+            # Obtenez le chemin du fichier à partir de la colonne "Nom du fichier"
+            file_name_item = self.tableWidget.item(row, 0)
+            if file_name_item:
+                input_file = file_name_item.text()
+
+                # Continuez seulement si l'extension est valide, vous devez remplacer ".extension_actuelle" par le vrai format
+                if input_file.endswith(".extension_actuelle"):
+                    # Récupérez le format sélectionné dans la colonne "format" (ici, nous utilisons "format_selection" pour illustrer)
+                    format_selection = "mp4"  # Remplacez ceci par le vrai format choisi
+
+                    # Formatez le chemin de sortie avec le dossier de destination
+                    output_file = os.path.join(folder_path,
+                                               f"{input_file.replace('.extension_actuelle', f'.{format_selection}')}")
+
+                    try:
+                        # Charger la vidéo d'entrée
+                        video = VideoFileClip(input_file)
+
+                        # Calculer la durée de la vidéo en secondes
+                        video_duration = video.duration
+
+                        # Convertir la vidéo dans le format de sortie choisi
+                        video.write_videofile(output_file, codec="libx264", progress_bar=False)
+
+                        # Mettez à jour la colonne "Statut" pour afficher "En cours ..." dès le début
+                        self.tableWidget.setItem(row, 3, QtWidgets.QTableWidgetItem("En cours ..."))
+
+                        # Mettez à jour la cellule de statut avec "Converti" lorsque la conversion est terminée
+                        status_item = QtWidgets.QTableWidgetItem("Converti")
+                        self.tableWidget.setItem(row, 3, status_item)
+                        # self.update_status(row, 100, "0:00")  # 100% indique que la conversion est terminée
+
+                        print(f"Conversion réussie : {input_file} -> {output_file}")
+
+                    except Exception as e:
+                        # En cas d'erreur, affichez un message d'erreur dans la colonne "Statut"
+                        status_item = QtWidgets.QTableWidgetItem(f"Erreur: {str(e)}")
+                        self.tableWidget.setItem(row, 3, status_item)
+                        print(f"Erreur de conversion : {input_file} -> {output_file}, {str(e)}")
+
+                    finally:
+                        # Réinitialisez le pourcentage à 0% une fois la conversion terminée
+                        self.tableWidget.setItem(row, 3, QtWidgets.QTableWidgetItem("100%"))
+
 
         # Créez un thread pour effectuer la conversion
         conversion_thread = threading.Thread(target=convert_video)
@@ -281,10 +325,72 @@ class Ui_MainWindow(object):
         # Mettez à jour la cellule de statut avec le temps restant
         self.update_status(row, 100, f"{int(remaining_time // 60)}:{int(remaining_time % 60):02d}")
 
+    """
+
+    def file_converter(self, input_file, row, column):
+        # Obtenez le dossier de destination à partir du champ de saisie
+        folder_path = self.lineEdit.text()
+
+        # Vérifiez que le dossier de destination est spécifié
+        if not folder_path:
+            QtWidgets.QMessageBox.critical(None, "Erreur", "Veuillez sélectionner un dossier de destination.")
+            return
+
+        # Récupérez le format sélectionné dans la colonne "format" (remplacez "format_selection" par le vrai format
+        # choisi)
+        format_combobox = self.tableWidget.cellWidget(row, 1)
+        format_selection = format_combobox.currentText()
+
+        # Formatez le chemin de sortie avec le dossier de destination
+        output_file = os.path.join(folder_path,
+                                   os.path.splitext(os.path.basename(input_file))[0] + '.' + format_selection)
+
+        # Créez un thread pour effectuer la conversion
+        conversion_thread = threading.Thread(target=self.convert_video, args=(input_file, output_file, row))
+        conversion_thread.start()
+
+        self.tableWidget.setItem(row, column, QtWidgets.QTableWidgetItem("Démarrer"))
+        self.tableWidget.item(row, column).setTextAlignment(QtCore.Qt.AlignCenter)
+
+    def convert_video(self, input_file, output_file, row):
+        try:
+            video = VideoFileClip(input_file)
+            video_duration = video.duration
+
+            # Mettez à jour la colonne "Statut" pour afficher "En cours ..." dès le début
+            self.tableWidget.setItem(row, 3, QtWidgets.QTableWidgetItem("En cours ..."))
+
+            # Initialisez le minuteur pour mettre à jour le temps restant
+            timer = QTimer(self)
+            timer.timeout.connect(lambda: self.update_remaining_time(row, video_duration))
+            timer.start(1000)  # Mise à jour toutes les 1 seconde
+
+            video.write_videofile(output_file, codec="libx264", progress_bar=False)
+
+            self.tableWidget.setItem(row, 3, QtWidgets.QTableWidgetItem("Converti"))
+
+        except Exception as e:
+            status_item = QtWidgets.QTableWidgetItem(f"Erreur: {str(e)}")
+            self.tableWidget.setItem(row, 3, status_item)
+            print(f"Erreur de conversion : {input_file} -> {output_file}, {str(e)}")
+
+    def update_remaining_time(self, row, video_duration):
+        # Calculez le temps restant
+        current_time = time.time()
+        start_time = self.start_times.get(row, current_time)
+        self.start_times[row] = start_time
+
+        elapsed_time = current_time - start_time
+        remaining_time = video_duration - elapsed_time
+
+        # Mettez à jour la colonne "Temps restant"
+        remaining_time_str = f"{int(remaining_time // 60)}:{int(remaining_time % 60):02d}"
+        self.tableWidget.setItem(row, 4, QtWidgets.QTableWidgetItem(remaining_time_str))
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton.setText(_translate("MainWindow", "selectionner"))
+        self.pushButton.setText(_translate("MainWindow", "sélectionner"))
         self.pushButton_2.setText(_translate("MainWindow", "convertir"))
         self.label.setText(_translate("MainWindow", "Enregistrer sous"))
         self.pushButton_3.setText(_translate("MainWindow", "..."))
@@ -294,6 +400,7 @@ class Ui_MainWindow(object):
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
