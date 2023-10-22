@@ -21,12 +21,12 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(780, 800, 171, 51))
+        self.pushButton.setGeometry(QtCore.QRect(780, 770, 171, 51))
         self.pushButton.setStyleSheet("background-color: rgb(255, 255, 255);\n"
 "font: 15pt \"Roboto\";")
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_2.setGeometry(QtCore.QRect(1000, 800, 161, 51))
+        self.pushButton_2.setGeometry(QtCore.QRect(1010, 770, 161, 51))
         self.pushButton_2.setStyleSheet("background-color: rgb(255, 255, 255);\n"
 "font: 15pt \"Roboto\";")
         self.pushButton_2.setObjectName("pushButton_2")
